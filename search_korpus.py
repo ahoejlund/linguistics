@@ -32,10 +32,14 @@ df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip)
 
 # specifying parameters for reading the excel-flie and saving later
 search_terms = ('lemma','word')
-texts = ('Verb', 'Verb.1')
-texts_inf = ('Infinitive', 'Infinitive.1')
-text_names = ('action', 'non-action')
-write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
+texts = ('Verb', 'Verb.1','Verb.2', 'Verb.3')
+texts_inf = ('Infinitive', 'Infinitive.1','Infinitive.2', 'Infinitive.3')
+text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
+write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'),('Automatic.4','Automatic.5'),('Automatic.6','Automatic.7'))
+#texts = ('Verb', 'Verb.1')
+#texts_inf = ('Infinitive', 'Infinitive.1')
+#text_names = ('action', 'non-action')
+#write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
 word_lists = []
 occ = OrderedDict()
 
