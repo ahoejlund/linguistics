@@ -3,7 +3,7 @@
 """
 Created on Fri Oct 13 21:31:23 2017
 
-@author: au183362
+@author: højlund
 """
 
 # measure how long it takes to run
@@ -14,8 +14,8 @@ from collections import OrderedDict
 import pandas
 import numpy as np
 from os.path import join, splitext
-from xlutils.copy import copy 
-from xlrd import open_workbook 
+from openpyxl import load_workbook
+
 from splinter import Browser
 # initialize (headless) browser
 browser = Browser('chrome', headless=True) # NB! Chrome extension must be installed for this to work, otherwise just leave blank, and Firefox will be used as default
@@ -26,20 +26,20 @@ browser.visit(korpus_url)
 
 # use pandas to read the excel file, specifying how many rows to skip before reading the header
 Pdir = '/Users/au183362/Dropbox/Parkinson_embodied/stimuli/'
-file_name = 'Sammenligningsskema.xls'
+file_name = 'Sammenligningsskema.xlsx'
 rows_to_skip = 17 # for indholdsord, skiprows=62 (NB! doublecheck this)
 df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip) 
 
 # specifying parameters for reading the excel-flie and saving later
 search_terms = ('lemma','word')
-texts = ('Verb', 'Verb.1','Verb.2', 'Verb.3')
-texts_inf = ('Infinitive', 'Infinitive.1','Infinitive.2', 'Infinitive.3')
-text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
-write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'),('Automatic.4','Automatic.5'),('Automatic.6','Automatic.7'))
-#texts = ('Verb', 'Verb.1')
-#texts_inf = ('Infinitive', 'Infinitive.1')
-#text_names = ('action', 'non-action')
-#write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
+#texts = ('Verb', 'Verb.1','Verb.2', 'Verb.3')
+#texts_inf = ('Infinitive', 'Infinitive.1','Infinitive.2', 'Infinitive.3')
+#text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
+#write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'),('Automatic.4','Automatic.5'),('Automatic.6','Automatic.7'))
+texts = ('Verb', 'Verb.1')
+texts_inf = ('Infinitive', 'Infinitive.1')
+text_names = ('action', 'non-action')
+write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
 word_lists = []
 occ = OrderedDict()
 
@@ -87,10 +87,9 @@ np.save('occurrences.npy', occ)
 #occ_words = np.load(join(Pdir,'korpus_dk_search/occ_words.npy')).item()
 
 START_ROW = rows_to_skip+1 # 0 based (subtract 1 from excel row number)
-rb = open_workbook(join(Pdir,file_name), formatting_info = True)
-r_sheet = rb.sheet_by_index(0) # read only copy to introspect the file
-wb = copy(rb) # a writable copy (can't read values out of this, only write to it)
-w_sheet = wb.get_sheet(0) # the sheet to write to within the writable copy
+wb = load_workbook(join(Pdir,file_name))
+sheet_name = wb.get_sheet_names()[0]
+sheet_ranges = wb[sheet_name]
 word_list_index = (1,3)
 
 # iterate over the two texts - first lemmas then words
@@ -98,15 +97,14 @@ for num, col in enumerate(write_names):
     for s, term in enumerate(search_terms):
         col_write = np.where(df.columns==write_names[num][s])[0][0] # column number for the relevant "Verb" column
         col_read = np.where(df.columns==texts[num])[0][0] # column number for the relevant "Automatic" column
-        for row_index in range(START_ROW, r_sheet.nrows):
-            check_word = r_sheet.cell(row_index, col_read).value # get the value of the relevant "Verb" cell to match with those in the word_list
+        for row_index in range(START_ROW, sheet_ranges.max_row):
+            check_word = sheet_ranges.cell(row=row_index+1, column=col_read+1).value # get the value of the relevant "Verb" cell to match with those in the word_list
             if (row_index-START_ROW) < len(word_lists[word_list_index[num]]):
                 if check_word == word_lists[word_list_index[num]][row_index-START_ROW]:
                     # if check_word and word_lists[num][row_index] are the same, then write the frequency in the relevant cell
-                    w_sheet.write(row_index, col_write, occ[text_names[num]][term][word_lists[s+num*2][row_index-START_ROW]])
+                    sheet_ranges.cell(row=row_index+1, column=col_write+1, value=occ[text_names[num]][term][word_lists[s+num*2][row_index-START_ROW]])
                     
 wb.save(join(Pdir,splitext(file_name)[0]) + '_upd' + splitext(file_name)[-1])
-
 
 t1 = time.time()
 total_time = t1-t0
