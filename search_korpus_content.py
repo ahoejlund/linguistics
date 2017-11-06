@@ -27,25 +27,28 @@ browser.visit(korpus_url)
 # use pandas to read the excel file, specifying how many rows to skip before reading the header
 Pdir = '/Users/au183362/Dropbox/Parkinson_embodied/stimuli/'
 file_name = 'Sammenligningsskema.xlsx'
-sub_header = 'Comparison verbs:' # content of the cell in the first column of the row with the relevant headers
+sub_header = 'Comparison content words:' # content of the cell in the first column of the row with the relevant headers
 df_dummy = pandas.read_excel(join(Pdir,file_name)) # dummy load of the spreadsheet
 first_col = df_dummy[df_dummy.columns[0]].values == sub_header # create boolean for first column
 rows_to_skip = [i for i, x in enumerate(first_col) if x] # find True index
-#rows_to_skip = 17 # for indholdsord = 62 (NB! doublecheck this), for verbs = 17
-df = pandas.read_excel(join(Pdir,file_name), skiprows=rows_to_skip[0] + 1) 
+#rows_to_skip = 62 # for indholdsord = 62 (NB! doublecheck this), for verbs = 17
+df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip[0] + 1) 
 
 # specifying parameters for reading the excel-flie and saving later
-search_terms = ('lemma', 'word')
-#texts = ('Verb', 'Verb.1', 'Verb.2', 'Verb.3')
+search_terms = ('lemma','word')
+#searc_pos = ('PoS', 'PoS.1', 'PoS.2', 'PoS.3')
+#texts = ('Content word', 'Content word.1', 'Content word.2', 'Content word.3')
 #texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
 #text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
-#write_names = (('Automatic', 'Automatic.1'), ('Automatic.2', 'Automatic.3'),
-#               ('Automatic.4', 'Automatic.5'), ('Automatic.6', 'Automatic.7'))
-texts = ('Verb', 'Verb.1')
+#write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'), 
+#               ('Frequency_lemma.2', 'Frequency_word.2'), ('Frequency_lemma.3', 'Frequency_word.3'))
+search_pos = ('PoS', 'PoS.1')
+texts = ('Content word', 'Content word.1')
 texts_inf = ('Infinitive', 'Infinitive.1')
 text_names = ('action', 'non-action')
-write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
+write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'))
 word_lists = []
+pos_lists = []
 occ = OrderedDict()
 
 # loop over the two old texts (aka. action and non-action)
@@ -53,9 +56,11 @@ for num, col in enumerate(texts):
     occ[text_names[num]] = OrderedDict()
     word_list_long = df[col].values
     inf_list_long = df[texts_inf[num]].values
+    pos_list_long = df[search_pos[num]].values
     nans = np.where(pandas.isnull(word_list_long))[0]
     word_lists.append((inf_list_long[:nans[0]-1]))
     word_lists.append((word_list_long[:nans[0]-1]))
+    pos_lists.append((pos_list_long[:nans[0]-1]))
     
     for s, term in enumerate(search_terms):  
         html = []
@@ -63,9 +68,10 @@ for num, col in enumerate(texts):
         
         for val, words in enumerate(word_lists[s+num*2]):
             words = words.strip()
+            pos = pos_lists[s+num*2][val]
                 
             browser.find_by_name('formal').click()
-            browser.find_by_id('search_box').fill('[' + term + '="' + words + '" & pos="V"]')
+            browser.find_by_id('search_box').fill('[' + term + '="' + words + '" & pos="' + pos + '"]')
             browser.find_by_id('search_button').click()
             html.append((browser.html))
             
