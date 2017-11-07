@@ -36,15 +36,15 @@ df = pandas.read_excel(join(Pdir,file_name), skiprows=rows_to_skip[0] + 1)
 
 # specifying parameters for reading the excel-flie and saving later
 search_terms = ('lemma', 'word')
-#texts = ('Verb', 'Verb.1', 'Verb.2', 'Verb.3')
-#texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
-#text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
-#write_names = (('Automatic', 'Automatic.1'), ('Automatic.2', 'Automatic.3'),
-#               ('Automatic.4', 'Automatic.5'), ('Automatic.6', 'Automatic.7'))
-texts = ('Verb', 'Verb.1')
-texts_inf = ('Infinitive', 'Infinitive.1')
-text_names = ('action', 'non-action')
-write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
+texts = ('Verb', 'Verb.1', 'Verb.2', 'Verb.3')
+texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
+text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
+write_names = (('Automatic', 'Automatic.1'), ('Automatic.2', 'Automatic.3'),
+               ('Automatic.4', 'Automatic.5'), ('Automatic.6', 'Automatic.7'))
+#texts = ('Verb', 'Verb.1')
+#texts_inf = ('Infinitive', 'Infinitive.1')
+#text_names = ('action', 'non-action')
+#write_names = (('Automatic','Automatic.1'),('Automatic.2','Automatic.3'))
 word_lists = []
 occ = OrderedDict()
 
@@ -70,9 +70,12 @@ for num, col in enumerate(texts):
             html.append((browser.html))
             
             reduced = html[val].find('Reduced from ')
+            no_result = html[val].find('No results')
             if reduced != -1:
                 reduc_end = html[val].find('occurrences',reduced+13)
                 occ[text_names[num]][term][words] = int(html[val][reduced+13:reduc_end-1])
+            elif no_result != -1:
+                occ[text_names[num]][term][words] = 0
             else:
                 term_end = html[val].find('occurrences',0)
                 term_beg = html[val].rfind('of',0,term_end)
