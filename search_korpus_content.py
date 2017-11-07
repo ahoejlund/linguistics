@@ -36,17 +36,17 @@ df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip[0] + 1)
 
 # specifying parameters for reading the excel-flie and saving later
 search_terms = ('lemma','word')
-#searc_pos = ('PoS', 'PoS.1', 'PoS.2', 'PoS.3')
-#texts = ('Content word', 'Content word.1', 'Content word.2', 'Content word.3')
-#texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
-#text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
-#write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'), 
-#               ('Frequency_lemma.2', 'Frequency_word.2'), ('Frequency_lemma.3', 'Frequency_word.3'))
-search_pos = ('PoS', 'PoS.1')
-texts = ('Content word', 'Content word.1')
-texts_inf = ('Infinitive', 'Infinitive.1')
-text_names = ('action', 'non-action')
-write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'))
+searc_pos = ('PoS', 'PoS.1', 'PoS.2', 'PoS.3')
+texts = ('Content word', 'Content word.1', 'Content word.2', 'Content word.3')
+texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
+text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
+write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'), 
+               ('Frequency_lemma.2', 'Frequency_word.2'), ('Frequency_lemma.3', 'Frequency_word.3'))
+#search_pos = ('PoS', 'PoS.1')
+#texts = ('Content word', 'Content word.1')
+#texts_inf = ('Infinitive', 'Infinitive.1')
+#text_names = ('action', 'non-action')
+#write_names = (('Frequency_lemma', 'Frequency_word'), ('Frequency_lemma.1', 'Frequency_word.1'))
 word_lists = []
 pos_lists = []
 occ = OrderedDict()
@@ -68,7 +68,7 @@ for num, col in enumerate(texts):
         
         for val, words in enumerate(word_lists[s+num*2]):
             words = words.strip()
-            pos = pos_lists[s+num*2][val]
+            pos = pos_lists[num][val]
                 
             browser.find_by_name('formal').click()
             browser.find_by_id('search_box').fill('[' + term + '="' + words + '" & pos="' + pos + '"]')
@@ -76,9 +76,12 @@ for num, col in enumerate(texts):
             html.append((browser.html))
             
             reduced = html[val].find('Reduced from ')
+            no_result = html[val].find('No results')
             if reduced != -1:
                 reduc_end = html[val].find('occurrences',reduced+13)
                 occ[text_names[num]][term][words] = int(html[val][reduced+13:reduc_end-1])
+            elif no_result != -1:
+                occ[text_names[num]][term][words] = 0
             else:
                 term_end = html[val].find('occurrences',0)
                 term_beg = html[val].rfind('of',0,term_end)
