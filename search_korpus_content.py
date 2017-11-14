@@ -30,13 +30,13 @@ file_name = 'Sammenligningsskema.xlsx'
 sub_header = 'Comparison content words:' # content of the cell in the first column of the row with the relevant headers
 df_dummy = pandas.read_excel(join(Pdir,file_name)) # dummy load of the spreadsheet
 first_col = df_dummy[df_dummy.columns[0]].values == sub_header # create boolean for first column
-rows_to_skip = [i for i, x in enumerate(first_col) if x] # find True index
+rows_to_skip = [i for i, x in enumerate(first_col) if x][0] # find True index
 #rows_to_skip = 62 # for indholdsord = 62 (NB! doublecheck this), for verbs = 17
-df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip[0] + 1) 
+df = pandas.read_excel(join(Pdir,file_name),skiprows=rows_to_skip + 1) 
 
 # specifying parameters for reading the excel-flie and saving later
 search_terms = ('lemma','word')
-searc_pos = ('PoS', 'PoS.1', 'PoS.2', 'PoS.3')
+search_pos = ('PoS', 'PoS.1', 'PoS.2', 'PoS.3')
 texts = ('Content word', 'Content word.1', 'Content word.2', 'Content word.3')
 texts_inf = ('Infinitive', 'Infinitive.1', 'Infinitive.2', 'Infinitive.3')
 text_names = ('action', 'non-action', 'act-non-act1', 'act-non-act2')
@@ -58,9 +58,9 @@ for num, col in enumerate(texts):
     inf_list_long = df[texts_inf[num]].values
     pos_list_long = df[search_pos[num]].values
     nans = np.where(pandas.isnull(word_list_long))[0]
-    word_lists.append((inf_list_long[:nans[0]-1]))
-    word_lists.append((word_list_long[:nans[0]-1]))
-    pos_lists.append((pos_list_long[:nans[0]-1]))
+    word_lists.append((inf_list_long[:nans[0]]))
+    word_lists.append((word_list_long[:nans[0]]))
+    pos_lists.append((pos_list_long[:nans[0]]))
     
     for s, term in enumerate(search_terms):  
         html = []
@@ -94,17 +94,16 @@ for num, col in enumerate(texts):
 browser.quit()
 
 # save the dictionary as numpy array
-np.save('occurrences.npy', occ)
+np.save(join(Pdir,'korpus_dk_search/occurrences_content.npy'), occ)
 
 # code needed to load the dictionaries if need be
-#occ_lemmas = np.load(join(Pdir,'korpus_dk_search/occ_lemmas.npy')).item()
-#occ_words = np.load(join(Pdir,'korpus_dk_search/occ_words.npy')).item()
+#occ = np.load(join(Pdir,'korpus_dk_search/occurrences_content.npy')).item()
 
 START_ROW = rows_to_skip+2 # 0 based (subtract 1 from excel row number)
 wb = load_workbook(join(Pdir,file_name))
 sheet_name = wb.get_sheet_names()[0]
 sheet_ranges = wb[sheet_name]
-word_list_index = (1,3)
+word_list_index = (1, 3, 5, 7)
 
 # iterate over the two texts - first lemmas then words
 for num, col in enumerate(write_names):
@@ -116,7 +115,7 @@ for num, col in enumerate(write_names):
             if (row_index-START_ROW) < len(word_lists[word_list_index[num]]):
                 if check_word == word_lists[word_list_index[num]][row_index-START_ROW]:
                     # if check_word and word_lists[num][row_index] are the same, then write the frequency in the relevant cell
-                    sheet_ranges.cell(row=row_index+1, column=col_write+1, value=occ[text_names[num]][term][word_lists[s+num*2][row_index-START_ROW]])
+                    sheet_ranges.cell(row=row_index+1, column=col_write+1, value=occ[text_names[num]][term][word_lists[s+num*2][row_index-START_ROW].strip()])
                     
 wb.save(join(Pdir,splitext(file_name)[0]) + '_upd' + splitext(file_name)[-1])
 
